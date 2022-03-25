@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { UserSignin } from './interface/allow-user.interface';
@@ -27,10 +28,9 @@ export class AuthService {
         const createdUser = new this.userModel(userSignup);
         return createdUser.save();
       }
-    } catch (err) {
-      console.log(err);
+    } catch (e) {
+      throw new InternalServerErrorException(e.message);
     }
-    return userSignup;
   }
   async signin(userSignin: UserSignin): Promise<any> {
     const user = await this.userModel

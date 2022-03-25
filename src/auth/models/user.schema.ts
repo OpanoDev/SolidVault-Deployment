@@ -4,19 +4,19 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop()
+  @Prop({ unique: false, type: String })
   fullName: string;
 
-  @Prop()
+  @Prop({ unique: true, type: String })
   emailId: string;
 
-  @Prop()
+  @Prop({ unique: true, type: Number })
   phoneNumber: number;
 
-  @Prop()
+  @Prop({ unique: true, type: String })
   username: string;
 
-  @Prop()
+  @Prop({ unique: false, type: String })
   password: string;
 }
 
