@@ -33,9 +33,9 @@ export class AuthService {
     }
   }
   async signin(userSignin: UserSignin): Promise<any> {
-    const user = await this.userModel
-      .find({ emailId: userSignin.emailId })
-      .lean();
+    const user = await this.userModel.find({ emailId: userSignin.emailId });
+
+    if (user[0] === null) throw new BadRequestException('User Not Found');
     if (!user) throw new BadRequestException('Credentials Incorrect!');
 
     const valid = await argon2.verify(user[0].password, userSignin.password);
@@ -47,11 +47,11 @@ export class AuthService {
 
   async signToken(
     id: any,
-    userName: string,
+    username: string,
   ): Promise<{ access_token: string }> {
     const payload = {
       sub: id,
-      userName,
+      username,
     };
     const token = await this.jwt.signAsync(payload, {
       expiresIn: '15min',
