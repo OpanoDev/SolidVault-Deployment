@@ -8,22 +8,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
 import { UserService } from '../services/user.service';
-import { ReqUserDto, UpdateUserDto } from '../dto';
+import { UpdateUserDto } from '../dto';
 import { GetCurrentUserById } from 'src/auth/decorators/getuserid.decorator';
+import { TotpGuard } from 'src/auth/guards/totp.guard';
 
 @Controller('user')
+@UseGuards(AuthGuard('jwt'), TotpGuard)
 export class UserController {
   constructor(private userService: UserService) {}
   @Get('/me')
-  @UseGuards(AuthGuard('jwt'))
   userData(@GetCurrentUserById() id: string): Promise<string> {
     return this.userService.userData(id);
   }
 
   @Put('/update-me')
-  @UseGuards(AuthGuard('jwt'))
   updateUserData(
     @GetCurrentUserById() id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -32,7 +31,6 @@ export class UserController {
   }
 
   @Delete('/delete-me')
-  @UseGuards(AuthGuard('jwt'))
   deleteUser(@GetCurrentUserById() id: string) {
     return this.userService.deleteUser(id);
   }

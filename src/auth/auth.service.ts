@@ -4,13 +4,14 @@ import {
   InternalServerErrorException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { UserSignin } from './interface/allow-user.interface';
-import { UserSignup } from './interface/create-user.interface';
 import { User, UserDocument } from './models/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
+import { verifyTOTP } from 'utils';
+import { MFASignin, UserSignin, UserSignup } from './interface';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -60,5 +61,20 @@ export class AuthService {
     return {
       access_token: token,
     };
+  }
+
+  async mfaSignin(code: string, id: string): Promise<MFASignin> {
+    const user: User = await this.userModel.findById(id);
+    if (!user) throw new BadRequestException('User not Found!!');
+    const { verified } = verifyTOTP(user.secret_32, code);
+
+    if (verified === true)
+      return {
+        verified,
+      };
+    else
+      return {
+        verified,
+      };
   }
 }

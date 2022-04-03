@@ -4,11 +4,15 @@ import {
   Post,
   UseFilters,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto, AllowUserDto } from './dto';
+import { GetCurrentUserById } from './decorators/getuserid.decorator';
+import { CreateUserDto, AllowUserDto, CodeDto } from './dto';
 import { MongoExceptionFilter } from './filters/MongoFilter.exception';
 import { User } from './models/user.schema';
+import { AuthGuard } from '@nestjs/passport';
+import { MFASignin } from './interface/mfasignin.interface';
 
 @Controller('api/auth')
 export class AuthController {
@@ -25,5 +29,14 @@ export class AuthController {
   @Post('signin')
   signin(@Body() allowUserDto: AllowUserDto): Promise<string> {
     return this.authservice.signin(allowUserDto);
+  }
+
+  @Post('mfa-signin')
+  @UseGuards(AuthGuard('jwt'))
+  mfaSignin(
+    @Body() codeDto: CodeDto,
+    @GetCurrentUserById() id: string,
+  ): Promise<MFASignin> {
+    return this.authservice.mfaSignin(codeDto.code, id);
   }
 }

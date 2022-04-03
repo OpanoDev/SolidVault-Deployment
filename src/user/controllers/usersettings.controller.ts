@@ -21,7 +21,7 @@ export class UserSettingsController {
     return this.userSettingsService.setMFA(userId);
   }
 
-  @Post('/first-mfa')
+  @Post('/first-mfa-auth')
   firstMFA(@Body() firstMFADto: FirstMFADto, @GetCurrentUserById() id: number) {
     const { code, secret_32, secret_link } = firstMFADto;
     return this.userSettingsService.firstMFA(secret_32, code, secret_link, id);
