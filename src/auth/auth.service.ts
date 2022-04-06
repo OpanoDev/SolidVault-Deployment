@@ -34,15 +34,17 @@ export class AuthService {
     }
   }
   async signin(userSignin: UserSignin): Promise<any> {
-    const user = await this.userModel.find({ emailId: userSignin.emailId });
-
-    if (user[0] === null) throw new BadRequestException('User Not Found');
+    const user = await this.userModel.findOne({
+      emailId: userSignin.emailId,
+    });
+    console.log(user);
+    if (user === null) throw new BadRequestException('User Not Found');
     if (!user) throw new BadRequestException('Credentials Incorrect!');
 
-    const valid = await argon2.verify(user[0].password, userSignin.password);
+    const valid = await argon2.verify(user.password, userSignin.password);
     if (!valid) throw new BadRequestException('Credential Incorrect!');
 
-    if (valid && user) return this.signToken(user[0]._id, user[0].username);
+    if (valid && user) return this.signToken(user._id, user.username);
     return 'Error Occuered';
   }
 
