@@ -11,10 +11,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserService } from '../services/user.service';
 import { UpdateUserDto } from '../dto';
 import { GetCurrentUserById } from 'src/auth/decorators/getuserid.decorator';
-import { TotpGuard } from 'src/auth/guards/totp.guard';
 
 @Controller('user')
-@UseGuards(AuthGuard('jwt'), TotpGuard)
+@UseGuards(AuthGuard('jwt'))
 export class UserController {
   constructor(private userService: UserService) {}
   @Get('/me')

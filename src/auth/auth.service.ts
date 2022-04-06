@@ -40,18 +40,40 @@ export class AuthService {
     console.log(user);
     if (user === null) throw new BadRequestException('User Not Found');
     if (!user) throw new BadRequestException('Credentials Incorrect!');
-
     const valid = await argon2.verify(user.password, userSignin.password);
     if (!valid) throw new BadRequestException('Credential Incorrect!');
 
-    if (valid && user) return this.signToken(user._id, user.username);
-    return 'Error Occuered';
+    if (user.mfa_status == false) {
+      if (valid && user) {
+        const token = await this.signToken(user._id, user.username);
+        return {
+          access_token: token,
+        };
+      }
+      return 'Error Occuered';
+    } else {
+      if (valid && user) return 'Success, totp verification is pending!';
+    }
   }
 
-  async signToken(
-    id: any,
-    username: string,
-  ): Promise<{ access_token: string }> {
+  async mfaSignin(code: string, username: string): Promise<MFASignin> {
+    const user = await this.userModel.findOne({ username: username });
+    if (!user) throw new BadRequestException('User not Found!!');
+    const { verified } = verifyTOTP(user.secret_32, code);
+
+    if (verified === true) {
+      const token = await this.signToken(user._id, user.username);
+      return {
+        verified,
+        access_token: token,
+      };
+    } else
+      return {
+        verified,
+      };
+  }
+
+  async signToken(id: any, username: string): Promise<string> {
     const payload = {
       sub: id,
       username,
@@ -60,23 +82,6 @@ export class AuthService {
       expiresIn: '15min',
       privateKey: Buffer.from(process.env.PRIV_KEY, 'base64').toString('ascii'),
     });
-    return {
-      access_token: token,
-    };
-  }
-
-  async mfaSignin(code: string, id: string): Promise<MFASignin> {
-    const user: User = await this.userModel.findById(id);
-    if (!user) throw new BadRequestException('User not Found!!');
-    const { verified } = verifyTOTP(user.secret_32, code);
-
-    if (verified === true)
-      return {
-        verified,
-      };
-    else
-      return {
-        verified,
-      };
+    return token;
   }
 }
