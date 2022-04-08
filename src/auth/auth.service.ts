@@ -25,7 +25,6 @@ export class AuthService {
       if (userSignup.password !== userSignup.confirmPassword) {
         throw new ServiceUnavailableException('Passwords Mismatched!');
       } else {
-        userSignup.password = await argon2.hash(userSignup.password);
         const createdUser = new this.userModel(userSignup);
         return createdUser.save();
       }
@@ -37,7 +36,6 @@ export class AuthService {
     const user = await this.userModel.findOne({
       emailId: userSignin.emailId,
     });
-    console.log(user);
     if (user === null) throw new BadRequestException('User Not Found');
     if (!user) throw new BadRequestException('Credentials Incorrect!');
     const valid = await argon2.verify(user.password, userSignin.password);

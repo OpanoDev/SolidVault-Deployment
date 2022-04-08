@@ -2,8 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/auth/models/user.schema';
 import { Model } from 'mongoose';
-import * as qrcode from 'qrcode';
-
 import { genSecret, verifyTOTP } from '../../../utils';
 import { SetMfa } from '../interfaces/index';
 
@@ -42,5 +40,15 @@ export class UserSettingsService {
       const upUser = await this.userModel.findByIdAndUpdate(id, updates);
       if (upUser) return 'MFA Activated';
     } else throw new BadRequestException('Error Occured');
+  }
+  async diableMFA(id: number) {
+    const updates = {
+      mfa_status: false,
+      secret_32: null,
+      secret_link: null,
+    };
+    const upUser = await this.userModel.findByIdAndUpdate(id, updates);
+    if (upUser) return 'MFA Disabled';
+    else throw new BadRequestException('Error Occured');
   }
 }

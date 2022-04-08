@@ -7,7 +7,7 @@ export class User {
   @Prop({ unique: false, type: String })
   fullName: string;
 
-  @Prop({ unique: true, type: String })
+  @Prop({ unique: true, type: String, lowercase: true })
   emailId: string;
 
   @Prop({ unique: true, type: Number })
@@ -22,10 +22,10 @@ export class User {
   @Prop({ unique: false, type: Boolean, default: false })
   mfa_status: boolean;
 
-  @Prop({ unique: true, type: String, default: '' })
+  @Prop({ unique: false, type: String, default: null })
   secret_link: string;
 
-  @Prop({ unique: true, type: String, default: '' })
+  @Prop({ unique: false, type: String, default: null })
   secret_32: string;
 }
 

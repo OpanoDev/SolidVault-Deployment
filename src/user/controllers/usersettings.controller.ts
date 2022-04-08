@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { Request } from 'express';
+import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserSettingsService } from '../services/index';
 import { GetCurrentUserById } from 'src/auth/decorators/getuserid.decorator';
@@ -25,5 +24,9 @@ export class UserSettingsController {
   firstMFA(@Body() firstMFADto: FirstMFADto, @GetCurrentUserById() id: number) {
     const { code, secret_32, secret_link } = firstMFADto;
     return this.userSettingsService.firstMFA(secret_32, code, secret_link, id);
+  }
+  @Put('/disable-mfa-auth')
+  diableMFA(@GetCurrentUserById() id: number) {
+    return this.userSettingsService.diableMFA(id);
   }
 }

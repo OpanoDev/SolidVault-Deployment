@@ -5,10 +5,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User, UserSchema } from './models/user.schema';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import * as argon2 from 'argon2';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     JwtModule.registerAsync({
       useFactory: async () => {
         const options: JwtModuleOptions = {
@@ -26,6 +26,21 @@ import { JwtStrategy } from './strategy/jwt.strategy';
         return options;
       },
     }),
+    MongooseModule.forFeatureAsync([
+      {
+        name: User.name,
+        useFactory: () => {
+          const schema = UserSchema;
+
+          schema.pre<User>('save', async function () {
+            const user: User = this;
+            const hashedPassword: string = await argon2.hash(user.password);
+            user.password = hashedPassword;
+          });
+          return schema;
+        },
+      },
+    ]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
