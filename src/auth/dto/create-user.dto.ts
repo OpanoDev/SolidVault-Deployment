@@ -4,6 +4,20 @@ import { IsEmail, IsNotEmpty, Length, Matches } from 'class-validator';
 
 import { MESSAGES, REGEX } from '../../../utils/app.utils';
 
+export class Address {
+  readonly address_line: string;
+
+  readonly city: string;
+
+  readonly country: string;
+}
+
+export class UserPlan {
+  plan: string;
+
+  group?: string;
+}
+
 export class CreateUserDto {
   @IsNotEmpty()
   readonly fullName: string;
@@ -25,6 +39,9 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   readonly confirmPassword: string;
-  // readonly city: string;
-  // readonly country: string;
+
+  @IsNotEmpty()
+  readonly address: Address;
+
+  readonly current_plan: UserPlan;
 }

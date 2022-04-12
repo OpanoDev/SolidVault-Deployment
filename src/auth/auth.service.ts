@@ -11,6 +11,7 @@ import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { verifyTOTP } from 'utils';
 import { MFASignin, UserSignin, UserSignup } from './interface';
+import { CreateUserDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +20,7 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async signup(userSignup: UserSignup): Promise<User> {
+  async signup(userSignup: CreateUserDto): Promise<User> {
     // main logic
     try {
       if (userSignup.password !== userSignup.confirmPassword) {
