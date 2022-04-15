@@ -8,6 +8,7 @@ import {
   VaultOwnSchema,
   VaultSharedSchema,
 } from './index';
+import { MFA, MFASchema } from './nested-models/mfa.schema';
 
 export type UserDocument = User & Document;
 
@@ -43,14 +44,9 @@ export class User extends Document {
   @Prop({ unique: false, type: String })
   password: string;
 
-  @Prop({ unique: false, type: Boolean, default: false })
-  mfa_status: boolean;
-
-  @Prop({ unique: false, type: String, default: null })
-  secret_link: string;
-
-  @Prop({ unique: false, type: String, default: null })
-  secret_32: string;
+  @Prop({ type: MFASchema, default: {} })
+  @Type(() => MFA)
+  mfa: MFA;
 
   @Prop({ required: false, type: VaultOwnSchema, default: {} })
   @Type(() => VaultOwn)

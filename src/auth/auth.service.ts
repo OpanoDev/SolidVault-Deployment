@@ -42,35 +42,31 @@ export class AuthService {
     const valid = await argon2.verify(user.password, userSignin.password);
     if (!valid) throw new BadRequestException('Credential Incorrect!');
 
-    if (user.mfa_status == false) {
-      if (valid && user) {
-        const token = await this.signToken(user._id, user.username);
-        return {
-          access_token: token,
-        };
-      }
-      return 'Error Occuered';
-    } else {
-      if (valid && user) return 'Success, totp verification is pending!';
-    }
-  }
-
-  async mfaSignin(code: string, username: string): Promise<MFASignin> {
-    const user = await this.userModel.findOne({ username: username });
-    if (!user) throw new BadRequestException('User not Found!!');
-    const { verified } = verifyTOTP(user.secret_32, code);
-
-    if (verified === true) {
+    if (valid && user) {
       const token = await this.signToken(user._id, user.username);
       return {
-        verified,
         access_token: token,
       };
-    } else
-      return {
-        verified,
-      };
+    }
+    return 'Error Occuered';
   }
+
+  // async mfaSignin(code: string, username: string): Promise<MFASignin> {
+  //   const user = await this.userModel.findOne({ username: username });
+  //   if (!user) throw new BadRequestException('User not Found!!');
+  //   const { verified } = verifyTOTP(user.secret_32, code);
+
+  //   if (verified === true) {
+  //     const token = await this.signToken(user._id, user.username);
+  //     return {
+  //       verified,
+  //       access_token: token,
+  //     };
+  //   } else
+  //     return {
+  //       verified,
+  //     };
+  // }
 
   async signToken(id: any, username: string): Promise<string> {
     const payload = {

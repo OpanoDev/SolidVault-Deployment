@@ -28,8 +28,8 @@ export class AuthController {
     return this.authservice.signin(allowUserDto);
   }
 
-  @Post('mfa-signin')
-  mfaSignin(@Body() codeDto: CodeDto): Promise<MFASignin> {
-    return this.authservice.mfaSignin(codeDto.code, codeDto.username);
-  }
+  // @Post('mfa-signin')
+  // mfaSignin(@Body() codeDto: CodeDto): Promise<MFASignin> {
+  //   return this.authservice.mfaSignin(codeDto.code, codeDto.username);
+  // }
 }

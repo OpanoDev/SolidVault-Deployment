@@ -1,0 +1,63 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+import { GetCurrentUserById } from 'src/auth/decorators/getuserid.decorator';
+import { User, UserDocument } from 'src/auth/models';
+import { Model } from 'mongoose';
+import { TOTPService } from './mfa-totp.service';
+import { TOTPUserSettingsGeneral } from './mfa-totp-general.service';
+
+@Controller('/totp')
+@UseGuards(AuthGuard('jwt'))
+export class TOTPController {
+  constructor(
+    private readonly totpService: TOTPService,
+    private readonly totpUserSettingsGeneral: TOTPUserSettingsGeneral,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+  ) {}
+  @Post('/generate-qr')
+  async setFirstTotp(
+    @Res() response: Response,
+    @GetCurrentUserById() id: string,
+  ) {
+    const user: User = await this.userModel.findById(id);
+    const { otpauthUrl } =
+      this.totpService.generateTwoFactorAuthenticationSecret(user);
+    return this.totpService.getTotpQr(response, otpauthUrl);
+  }
+
+  @Post('/turn-on')
+  async firstTotpVerification(
+    @GetCurrentUserById() id: string,
+    @Body() { totp_code }: any,
+  ) {
+    const user: User = await this.userModel.findById(id);
+    const isCodeValid = this.totpService.firstTotpVerification(
+      totp_code,
+      user.mfa.secret,
+    );
+    if (!isCodeValid) {
+      throw new UnauthorizedException('Wrong authentication code');
+    }
+    return await this.totpUserSettingsGeneral.enableMFA(id);
+  }
+
+  @Get('/turn-off')
+  async removeTOTP(@GetCurrentUserById() id: string) {
+    return await this.totpUserSettingsGeneral.diableMFA(id);
+  }
+
+  @Get('/status')
+  async getTOTPStatus(@GetCurrentUserById() id: string) {
+    return await this.totpUserSettingsGeneral.showMFAStatus(id);
+  }
+}
