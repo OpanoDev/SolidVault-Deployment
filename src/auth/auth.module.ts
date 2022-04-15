@@ -5,8 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User, UserSchema } from './models/user.schema';
 import { JwtStrategy } from './strategy/jwt.strategy';
-import * as argon2 from 'argon2';
-
+import * as bcryprt from 'bcrypt';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -34,7 +33,10 @@ import * as argon2 from 'argon2';
 
           schema.pre<User>('save', async function () {
             const user: User = this;
-            const hashedPassword: string = await argon2.hash(user.password);
+            const hashedPassword: string = await bcryprt.hash(
+              user.password,
+              10,
+            );
             user.password = hashedPassword;
           });
           return schema;

@@ -7,7 +7,7 @@ import {
 import { User, UserDocument } from './models/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import * as argon2 from 'argon2';
+import * as bcryprt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { verifyTOTP } from 'utils';
 import { MFASignin, UserSignin, UserSignup } from './interface';
@@ -39,7 +39,7 @@ export class AuthService {
     });
     if (user === null) throw new BadRequestException('User Not Found');
     if (!user) throw new BadRequestException('Credentials Incorrect!');
-    const valid = await argon2.verify(user.password, userSignin.password);
+    const valid = await bcryprt.compare(userSignin.password, user.password);
     if (!valid) throw new BadRequestException('Credential Incorrect!');
 
     if (valid && user) {
