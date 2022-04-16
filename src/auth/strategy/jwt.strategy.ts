@@ -16,7 +16,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt-cookie') {
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: Buffer.from(process.env.PUB_KEY, 'base64').toString('ascii'),
+      secretOrKey: Buffer.from(process.env.JWT_PUB_KEY, 'base64').toString(
+        'ascii',
+      ),
       algorithms: ['RS256'],
     });
   }

@@ -6,7 +6,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { User, UserDocument } from './models/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -103,7 +103,9 @@ export class AuthService {
     };
     const token: string = await this.jwt.signAsync(payload, {
       expiresIn: process.env.JWT_EXPIRATION_TIME,
-      privateKey: Buffer.from(process.env.PRIV_KEY, 'base64').toString('ascii'),
+      privateKey: Buffer.from(process.env.JWT_PRIV_KEY, 'base64').toString(
+        'ascii',
+      ),
     });
     return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_EXPIRATION_TIME}`;
   }
@@ -124,7 +126,9 @@ export class AuthService {
     };
     const token: string = await this.jwt.signAsync(payload, {
       expiresIn: process.env.JWT_EXPIRATION_TIME,
-      privateKey: Buffer.from(process.env.PRIV_KEY, 'base64').toString('ascii'),
+      privateKey: Buffer.from(process.env.JWT_PRIV_KEY, 'base64').toString(
+        'ascii',
+      ),
     });
     return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_EXPIRATION_TIME}`;
   }

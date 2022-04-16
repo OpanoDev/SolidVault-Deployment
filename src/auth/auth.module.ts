@@ -13,12 +13,6 @@ import { JwtTwoFactorStrategy } from './strategy/jwt-mfa.strategy';
     JwtModule.registerAsync({
       useFactory: async () => {
         const options: JwtModuleOptions = {
-          privateKey: Buffer.from(process.env.PRIV_KEY, 'base64').toString(
-            'ascii',
-          ),
-          publicKey: Buffer.from(process.env.PUB_KEY, 'base64').toString(
-            'ascii',
-          ),
           signOptions: {
             expiresIn: process.env.JWT_EXPIRATION_TIME,
             algorithm: 'RS256',
