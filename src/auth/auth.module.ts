@@ -4,10 +4,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User, UserSchema } from './models/user.schema';
-import { JwtStrategy } from './strategy/jwt.strategy';
 import * as bcryprt from 'bcrypt';
 import { TOTPUserSettingsGeneral } from 'src/mfa-auth/mfa-totp-auth/mfa-totp-general.service';
-import { JwtTwoFactorStrategy } from './strategy/jwt-mfa.strategy';
+import { CookieSettings } from './cookie.services';
+import {
+  JwtRefreshStrategy,
+  JwtTwoFactorStrategy,
+  JwtStrategy,
+} from './strategy';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -46,6 +50,8 @@ import { JwtTwoFactorStrategy } from './strategy/jwt-mfa.strategy';
     TOTPUserSettingsGeneral,
     JwtStrategy,
     JwtTwoFactorStrategy,
+    JwtRefreshStrategy,
+    CookieSettings,
   ],
 })
 export class Auth {}

@@ -11,17 +11,17 @@ import { User, UserDocument } from './models/user.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcryprt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
 import { AllowUserDto, CreateUserDto } from './dto';
 import { TOTPUserSettingsGeneral } from 'src/mfa-auth/mfa-totp-auth/mfa-totp-general.service';
 import { GeneralResponse } from './interface';
+import { CookieSettings } from './cookie.services';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly totpUserSettingsGeneral: TOTPUserSettingsGeneral,
-    private jwt: JwtService,
+    private readonly cookieSettings: CookieSettings,
   ) {}
 
   async signup(userSignup: CreateUserDto): Promise<GeneralResponse> {
@@ -52,8 +52,14 @@ export class AuthService {
     if (!valid) throw new BadRequestException('Credential Incorrect!');
 
     if (valid && user) {
-      const cookie: any = await this.getCookieWithJwtToken(user._id);
-      res.setHeader('Set-Cookie', cookie);
+      const accessTokenCookie: string =
+        await this.cookieSettings.getCookieWithJwtToken(user._id);
+      const { refreshToken, refreshCookie }: any =
+        await this.cookieSettings.getCookieWithJwtRefreshToken(user._id);
+
+      await this.cookieSettings.setCurrentRefreshToken(refreshToken, user._id);
+
+      res.setHeader('Set-Cookie', [accessTokenCookie, refreshCookie]);
       user.password = undefined;
       const toBeReturned: GeneralResponse = {
         statusCode: HttpStatus.OK,
@@ -62,8 +68,11 @@ export class AuthService {
       return res.send(toBeReturned);
     }
   }
-  public getCookieForLogOut(): string {
-    return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
+  public getCookieForLogOut(): string[] {
+    return [
+      'Authentication=; HttpOnly; Path=/; Max-Age=0',
+      'Refresh=; HttpOnly; Path=/; Max-Age=0',
+    ];
   }
 
   async mfaSignin_totp(
@@ -82,7 +91,8 @@ export class AuthService {
       );
 
     if (!isValid) throw new UnauthorizedException('Wrong Authentication Code');
-    const cookie: string = await this.getCookieWithJwtAccessToken(id, true);
+    const cookie: string =
+      await this.cookieSettings.getCookieWithJwtAccessTokenMFA(id, true);
 
     res.setHeader('Set-Cookie', cookie);
 
@@ -91,45 +101,16 @@ export class AuthService {
       message: 'TOTP verified!',
     };
   }
-
-  async getCookieWithJwtToken(id: any): Promise<string> {
+  async refresh(id: string): Promise<string> {
     const user: User = await this.userModel.findById(id);
-    const username: string = user.username;
-    const mfa_status: string = user.mfa.status;
-    const payload = {
-      sub: id,
-      username,
-      mfa_status,
-    };
-    const token: string = await this.jwt.signAsync(payload, {
-      expiresIn: process.env.JWT_EXPIRATION_TIME,
-      privateKey: Buffer.from(process.env.JWT_PRIV_KEY, 'base64').toString(
-        'ascii',
-      ),
-    });
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_EXPIRATION_TIME}`;
-  }
-  // by this isSecondFactorAuthenticated property, we can now distinguish
-  // between tokens created with and without two-factor authentication.
-  async getCookieWithJwtAccessToken(
-    id: string,
-    isSecondFactorAuthenticated: boolean,
-  ): Promise<string> {
-    const user: User = await this.userModel.findById(id);
-    const username: string = user.username;
-    const mfa_status: string = user.mfa.status;
-    const payload = {
-      sub: id,
-      username,
-      mfa_status,
-      isSecondFactorAuthenticated,
-    };
-    const token: string = await this.jwt.signAsync(payload, {
-      expiresIn: process.env.JWT_EXPIRATION_TIME,
-      privateKey: Buffer.from(process.env.JWT_PRIV_KEY, 'base64').toString(
-        'ascii',
-      ),
-    });
-    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${process.env.JWT_EXPIRATION_TIME}`;
+    if (user.mfa.status === 'disabled') {
+      const accessTokenCookie: string =
+        await this.cookieSettings.getCookieWithJwtToken(id);
+      return accessTokenCookie;
+    } else {
+      const accessTokenCookie: string =
+        await this.cookieSettings.getCookieWithJwtAccessTokenMFA(id, true);
+      return accessTokenCookie;
+    }
   }
 }

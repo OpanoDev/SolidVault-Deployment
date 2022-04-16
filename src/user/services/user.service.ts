@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/auth/models/user.schema';
 import { UpdateUserDto } from '../dto';
 import { Model } from 'mongoose';
+import { GeneralResponse } from 'src/auth/interface';
 
 @Injectable()
 export class UserService {
@@ -12,7 +13,10 @@ export class UserService {
     return `Welcome ${user.fullName}`;
   }
 
-  async updateUserData(updateUserDto: UpdateUserDto, id: string) {
+  async updateUserData(
+    updateUserDto: UpdateUserDto,
+    id: string,
+  ): Promise<GeneralResponse> {
     const options = { new: true };
     const upUser = await this.userModel.findByIdAndUpdate(
       id,
@@ -21,13 +25,19 @@ export class UserService {
     );
     if (!upUser) throw new BadRequestException('No User Found');
 
-    return upUser;
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User Updated!',
+    };
   }
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string): Promise<GeneralResponse> {
     const user = await this.userModel.findByIdAndDelete(id);
     if (!user) throw new BadRequestException('User Not Found');
 
-    return 'User Deleted';
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User Deleted!',
+    };
   }
 }

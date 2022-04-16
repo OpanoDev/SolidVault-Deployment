@@ -44,6 +44,10 @@ export class User extends Document {
   @Prop({ unique: false, type: String })
   password: string;
 
+  @Exclude()
+  @Prop({ type: String })
+  currentHashedRefreshToken?: string;
+
   @Prop({ type: MFASchema, default: {} })
   @Type(() => MFA)
   mfa: MFA;

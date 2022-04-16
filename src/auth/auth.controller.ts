@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -17,10 +18,15 @@ import { MongoExceptionFilter } from './filters/MongoFilter.exception';
 import { GetCurrentUserById } from './decorators/getuserid.decorator';
 import { GeneralResponse } from './interface';
 import { JwtAuthenticationGuard, JwtTwoFactorGuard } from './guards';
+import { CookieSettings } from './cookie.services';
+import JwtRefreshGuard from './guards/jwt-refresh.guard';
 
 @Controller('api/auth')
 export class AuthController {
-  constructor(private authservice: AuthService) {}
+  constructor(
+    private authservice: AuthService,
+    private readonly cookieSettings: CookieSettings,
+  ) {}
 
   @UseFilters(MongoExceptionFilter)
   @HttpCode(200)
@@ -40,14 +46,23 @@ export class AuthController {
     return this.authservice.signin(allowUserDto, res);
   }
 
+  @Get('/refresh')
+  @UseGuards(JwtRefreshGuard)
+  async refresh(@Res() response: Response, @GetCurrentUserById() id: string) {
+    const refreshCookie: string = await this.authservice.refresh(id);
+    response.setHeader('Set-Cookie', refreshCookie);
+    response.send('done');
+  }
+
   @Post('signout')
   @HttpCode(200)
   @UseGuards(JwtTwoFactorGuard)
-  async signOutt(
-    @Req() request: Request,
+  async signOut(
     @Res() response: Response,
+    @GetCurrentUserById() id: string,
   ): Promise<GeneralResponse> {
     response.setHeader('Set-Cookie', this.authservice.getCookieForLogOut());
+    await this.cookieSettings.removeRefreshToken(id);
     return response.send({
       statusCode: HttpStatus.OK,
       message: 'Successfully logged Out',
