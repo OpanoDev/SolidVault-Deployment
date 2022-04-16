@@ -61,13 +61,23 @@ export class AuthService {
 
       res.setHeader('Set-Cookie', [accessTokenCookie, refreshCookie]);
       user.password = undefined;
-      const toBeReturned: GeneralResponse = {
-        statusCode: HttpStatus.OK,
-        message: 'User can Log in',
-      };
-      return res.send(toBeReturned);
+
+      if (user.mfa.status === 'enabled') {
+        const toBeReturned: GeneralResponse = {
+          statusCode: HttpStatus.OK,
+          message: 'Success!, verify mfa',
+        };
+        return res.send(toBeReturned);
+      } else {
+        const toBeReturned: GeneralResponse = {
+          statusCode: HttpStatus.OK,
+          message: 'User can Log in',
+        };
+        return res.send(toBeReturned);
+      }
     }
   }
+
   public getCookieForLogOut(): string[] {
     return [
       'Authentication=; HttpOnly; Path=/; Max-Age=0',
