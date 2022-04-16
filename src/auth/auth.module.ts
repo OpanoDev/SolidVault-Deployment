@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import { User, UserSchema } from './models/user.schema';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import * as bcryprt from 'bcrypt';
+import { TOTPUserSettingsGeneral } from 'src/mfa-auth/mfa-totp-auth/mfa-totp-general.service';
+import { JwtTwoFactorStrategy } from './strategy/jwt-mfa.strategy';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -18,7 +20,7 @@ import * as bcryprt from 'bcrypt';
             'ascii',
           ),
           signOptions: {
-            expiresIn: '15min',
+            expiresIn: process.env.JWT_EXPIRATION_TIME,
             algorithm: 'RS256',
           },
         };
@@ -45,6 +47,11 @@ import * as bcryprt from 'bcrypt';
     ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    TOTPUserSettingsGeneral,
+    JwtStrategy,
+    JwtTwoFactorStrategy,
+  ],
 })
 export class Auth {}

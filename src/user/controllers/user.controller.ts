@@ -7,13 +7,13 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { UserService } from '../services/user.service';
 import { UpdateUserDto } from '../dto';
 import { GetCurrentUserById } from 'src/auth/decorators/getuserid.decorator';
+import { JwtTwoFactorGuard } from 'src/auth/guards';
 
 @Controller('user')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtTwoFactorGuard)
 export class UserController {
   constructor(private userService: UserService) {}
   @Get('/me')

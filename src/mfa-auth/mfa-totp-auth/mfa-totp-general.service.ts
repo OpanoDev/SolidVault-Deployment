@@ -1,16 +1,20 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/auth/models';
 import { Model } from 'mongoose';
+import { authenticator } from 'otplib';
+import { GeneralResponse } from 'src/auth/interface';
+import { TOTPStatus } from './interfaces';
 
 @Injectable()
 export class TOTPUserSettingsGeneral {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
-  async showMFAStatus(id: string): Promise<any> {
+  async showMFAStatus(id: string): Promise<TOTPStatus> {
     const user = await this.userModel.findById(id);
     if (!user) throw new UnauthorizedException('No User Found');
     const { status, type } = user.mfa;
@@ -20,7 +24,10 @@ export class TOTPUserSettingsGeneral {
     };
   }
 
-  async setTwoFactorAuthenticationSecret(id: string, secret: string) {
+  async setTwoFactorAuthenticationSecret(
+    id: string,
+    secret: string,
+  ): Promise<string> {
     const updates = {
       mfa: {
         type: 'totp',
@@ -31,7 +38,7 @@ export class TOTPUserSettingsGeneral {
     if (user) return 'Updated The secret';
   }
 
-  async enableMFA(id: string) {
+  async enableMFA(id: string): Promise<GeneralResponse> {
     this.userModel.findOneAndUpdate(
       { _id: id },
       {
@@ -41,15 +48,30 @@ export class TOTPUserSettingsGeneral {
         if (err) throw new BadRequestException('Cannot add totp feature');
       },
     );
-    return 'TOTP Enabled';
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'TOTP Enabled',
+    };
   }
 
-  async diableMFA(id: string) {
+  async diableMFA(id: string): Promise<GeneralResponse> {
     const updates = {
       mfa: {},
     };
     const upUser = await this.userModel.findByIdAndUpdate(id, updates);
-    if (upUser) return 'MFA Disabled';
-    else throw new BadRequestException('Error Occured');
+    if (!upUser) throw new BadRequestException('Error Occured');
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'MFA Disabled',
+    };
+  }
+  public isTwoFactorAuthenticationCodeValid(
+    twoFactorAuthenticationCode: string,
+    secret: string,
+  ) {
+    return authenticator.verify({
+      token: twoFactorAuthenticationCode,
+      secret: secret,
+    });
   }
 }

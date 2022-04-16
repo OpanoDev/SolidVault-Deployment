@@ -7,7 +7,10 @@ import { Model } from 'mongoose';
 import { Request } from 'express';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt-cookie') {
+export class JwtTwoFactorStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-two-factor',
+) {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -22,6 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt-cookie') {
   }
   async validate(payload: any) {
     const user: User = await this.userModel.findById(payload.sub);
-    if (user) return payload;
+    if (user.mfa.status === 'disabled') return payload;
+    if (payload.isSecondFactorAuthenticated) return payload;
   }
 }
