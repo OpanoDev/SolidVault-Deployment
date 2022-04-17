@@ -9,6 +9,10 @@ import {
   VaultSharedSchema,
 } from './index';
 import { MFA, MFASchema } from './nested-models/mfa.schema';
+import {
+  UserDevice,
+  UserDeviceSchema,
+} from './nested-models/user-device/user-device.schema';
 
 export type UserDocument = User & Document;
 
@@ -51,6 +55,10 @@ export class User extends Document {
   @Prop({ type: MFASchema, default: {} })
   @Type(() => MFA)
   mfa: MFA;
+
+  @Prop({ type: UserDeviceSchema, default: {} })
+  @Type(() => UserDevice)
+  userDevices: UserDevice[];
 
   @Prop({ required: false, type: VaultOwnSchema, default: {} })
   @Type(() => VaultOwn)
