@@ -1,6 +1,6 @@
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript repository of Solidqore.
+[Nest](https://github.com/nestjs/nest) Framework TypeScript Repository of SolidVault.
 
 ## Installation
 
